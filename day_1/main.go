@@ -17,9 +17,8 @@ func main() {
 }
 
 func partTwo(input []byte) {
-	stringInput := string(input)
 	total := 0
-	inputLines := strings.Split(stringInput, "\n")
+	inputLines := strings.Split(string(input), "\n")
 	inputMap := map[string]int{
 		// "zero":  0,
 		"0":     0,
@@ -46,21 +45,20 @@ func partTwo(input []byte) {
 		line := inputLines[i]
 		var min, firstVal, max, lastVal int = len(line), 0, 0, 0
 		for k, v := range inputMap {
-			index := strings.Index(line, k)
-			if index != -1 {
-				// fmt.Printf("checking for %v, result: %v\n", k, index)
-				if index <= min {
-					min = index
+			firstIndex := strings.Index(line, k)
+			if firstIndex != -1 {
+				if firstIndex <= min {
+					min = firstIndex
 					firstVal = v
 				}
-				if index >= max {
-					max = index
+				lastIndex := strings.LastIndex(line, k)
+				if lastIndex >= max {
+					max = lastIndex
 					lastVal = v
 				}
+
 			}
-			// fmt.Printf("checking for %v, result: %v\n", k, index)
 		}
-		fmt.Printf("row: %v/%v, %v%v\n", i+1, len(inputLines), firstVal, lastVal)
 		total += 10*firstVal + lastVal
 	}
 	fmt.Println(total)
