@@ -94,33 +94,40 @@ func partCheck(i, j int, schematic [][]*int) int {
 }
 
 func readInt(j, dir int, schematicLine []*int, total *int) *int {
+	// if it would go out of bounds
 	if schematicLine[j] == nil || j >= len(schematicLine) || j < 0 || *schematicLine[j] == 0 {
-		return schematicLine[j-1]
+		return nil
 	}
+	// direction for recursion, up (1), down (-1), both (0)
 	if dir == 0 {
 		total = schematicLine[j]
 	}
-	fmt.Println("running total is:\t", *total)
-	schematicLine[j] = nil
-	// looping because each one can go forward and backward so duplicating stuff
-	if dir == -1 || dir == 0 {
+
+	// if going down
+	if dir < 0 || dir == 0 {
 		fmt.Println("going down", *total)
+		if dir != 0 {
+			total = intPtr(*schematicLine[j]*10 + *total)
+		}
 		val := readInt(j-1, -1, schematicLine, total)
 		if val != nil {
 			total = intPtr(*val*10 + *total)
 		}
 		fmt.Println("gone down", *total)
 	}
-	// fmt.Println("running total 2 is:\t", total)
-	if dir == 1 || dir == 0 {
+	// if going up
+	if dir > 0 || dir == 0 {
 		fmt.Println("going up", *total)
+		if dir != 0 {
+			total = intPtr(10*(*total) + *schematicLine[j])
+		}
 		val := readInt(j+1, 1, schematicLine, total)
 		if val != nil {
-			total = intPtr(10*(*total) + *val)
+			total = intPtr(*val + *total*10)
 		}
 		fmt.Println("gone up", *total)
 	}
-
 	fmt.Println("the total:\t\t", *total)
+	schematicLine[j] = nil
 	return total
 }
