@@ -59,9 +59,8 @@ func partCheck(i, j int, schematic [][]*int) int {
 		if i > 0 {
 			fmt.Println("case 1")
 			if schematic[i-1][j] != nil {
-				total += *readInt(j, 0, schematic[i-1], &total)
-				// total += *schematic[i-1][j]
-				// schematic[i-1][j] = nil
+				total += *coordinates(j, 0, schematic[i-1], total)
+
 			}
 		}
 		if j != 0 {
@@ -93,41 +92,40 @@ func partCheck(i, j int, schematic [][]*int) int {
 	return total
 }
 
-func readInt(j, dir int, schematicLine []*int, total *int) *int {
+func coordinates(j, dir int, schematicLine []*int, total int) *int {
 	// if it would go out of bounds
 	if schematicLine[j] == nil || j >= len(schematicLine) || j < 0 || *schematicLine[j] == 0 {
 		return nil
 	}
-	// direction for recursion, up (1), down (-1), both (0)
+	// direction for recursion, right (1), left (-1), both (0)
 	if dir == 0 {
-		total = schematicLine[j]
+		total = *schematicLine[j]
 	}
 
-	// if going down
+	// if going left
 	if dir < 0 || dir == 0 {
-		fmt.Println("going down", *total)
+		fmt.Println("going left", total)
 		if dir != 0 {
-			total = intPtr(*schematicLine[j]*10 + *total)
+			total = *schematicLine[j]*10 + total
 		}
-		val := readInt(j-1, -1, schematicLine, total)
-		if val != nil {
-			total = intPtr(*val*10 + *total)
+		val := coordinates(j-1, -1, schematicLine, total)
+		if val != nil && total/10 == *val {
+			total = *val
 		}
-		fmt.Println("gone down", *total)
+		fmt.Println("gone left", total)
 	}
-	// if going up
+	// if going right
 	if dir > 0 || dir == 0 {
-		fmt.Println("going up", *total)
+		fmt.Println("going right", total)
 		if dir != 0 {
-			total = intPtr(10*(*total) + *schematicLine[j])
+			total = 10*(total) + *schematicLine[j]
 		}
-		val := readInt(j+1, 1, schematicLine, total)
-		if val != nil {
-			total = intPtr(*val + *total*10)
+		val := coordinates(j+1, 1, schematicLine, total)
+		if val != nil && *val/10 == total {
+			total = *val
 		}
-		fmt.Println("gone up", *total)
 	}
-	fmt.Println("the total:\t\t", *total)
+	fmt.Println("the total:\t\t", total)
 	schematicLine[j] = nil
-	return total
+	return &total
 }
