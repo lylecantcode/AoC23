@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strings"
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
+	input, err := os.ReadFile("day3.txt")
 	if err != nil {
 		log.Fatal("failed to read input")
 	}
@@ -19,27 +20,72 @@ func main() {
 
 func partOne(input []string) {
 	// last row has a new line on it
-	size := len(input) - 1
+	size := len(input)
 	schematic := make([][]*int, size)
+	symbols := make([][]bool, size)
 	for i := 0; i < size; i++ {
 		width := len(input[i])
 		schematic[i] = make([]*int, width)
+		symbols[i] = make([]bool, width)
 		for j := 0; j < width; j++ {
 			val := input[i][j]
 			if val >= 48 && val <= 57 {
 				schematic[i][j] = intPtr(int(val) - 48)
 			} else if val != '.' {
-				schematic[i][j] = intPtr(0)
-			}
-			_ = partCheck(i-1, j, schematic)
-		}
-		if i == size-1 {
-			for k := 0; k < len(schematic[i]); k++ {
-				_ = partCheck(i-1, k, schematic)
+				symbols[i][j] = true
 			}
 		}
 	}
-	fmt.Println(*schematic[0][0], *schematic[0][1], *schematic[0][2])
+
+	for i := 0; i < len(schematic); i++ {
+		val := 0
+		length := 0
+		for j := 0; j < len(schematic[i]); j++ {
+			current := schematic[i][j]
+			if current != nil {
+				val = val*10 + *current
+				length++
+			} else {
+				ptrVal := intPtr(val)
+				for k := length; k > 0; k-- {
+					schematic[i][j-k] = ptrVal
+				}
+				val = 0
+				length = 0
+			}
+		}
+	}
+	var addressSlice []*int
+	for i := 0; i < len(symbols); i++ {
+		for j := 0; j < len(symbols[i]); j++ {
+			if symbols[i][j] {
+				// check the 9 squares around
+				// var symbolTracker []*int
+				for k := i - 1; k <= i+1; k++ {
+					for l := j - 1; l <= j+1; l++ {
+						address := checkProximities(k, l, schematic)
+						if address != nil && !slices.Contains(addressSlice, address) {
+							addressSlice = append(addressSlice, address)
+							// symbolTracker = append(symbolTracker, address)
+						}
+					}
+				}
+			}
+		}
+	}
+	total := 0
+	for i := 0; i < len(addressSlice); i++ {
+		fmt.Println(*addressSlice[i])
+		total += *addressSlice[i]
+	}
+	fmt.Println(total)
+}
+
+func checkProximities(i, j int, slice [][]*int) *int {
+	if i < 0 || j < 0 || i >= len(slice) || j >= len(slice[i]) || slice[i][j] == nil {
+		return nil
+	}
+	return slice[i][j]
 }
 
 func partTwo(input []string) {
@@ -48,84 +94,4 @@ func partTwo(input []string) {
 
 func intPtr(i int) *int {
 	return &i
-}
-
-func partCheck(i, j int, schematic [][]*int) int {
-	if i < 0 {
-		return 0
-	}
-	total := 0
-	if schematic[i][j] != nil && *schematic[i][j] == 0 {
-		if i > 0 {
-			fmt.Println("case 1")
-			if schematic[i-1][j] != nil {
-				total += *coordinates(j, 0, schematic[i-1], total)
-
-			}
-		}
-		if j != 0 {
-			fmt.Println("case 2")
-			if schematic[i][j-1] != nil {
-				x := j - 1
-				lastVal := 0
-				for {
-					if schematic[i][x] == nil {
-						break
-					}
-					lastVal = *schematic[i][x]
-					x++
-				}
-				total += lastVal
-			}
-		}
-		if i != len(schematic)-2 {
-			fmt.Println("case 3")
-			if schematic[i+1][j] != nil {
-			}
-		}
-		if j != len(schematic[i])-2 {
-			fmt.Println("case 4")
-			if schematic[i][j+1] != nil {
-			}
-		}
-	}
-	return total
-}
-
-func coordinates(j, dir int, schematicLine []*int, total int) *int {
-	// if it would go out of bounds
-	if schematicLine[j] == nil || j >= len(schematicLine) || j < 0 || *schematicLine[j] == 0 {
-		return nil
-	}
-	// direction for recursion, right (1), left (-1), both (0)
-	if dir == 0 {
-		total = *schematicLine[j]
-	}
-
-	// if going left
-	if dir < 0 || dir == 0 {
-		fmt.Println("going left", total)
-		if dir != 0 {
-			total = *schematicLine[j]*10 + total
-		}
-		val := coordinates(j-1, -1, schematicLine, total)
-		if val != nil && total/10 == *val {
-			total = *val
-		}
-		fmt.Println("gone left", total)
-	}
-	// if going right
-	if dir > 0 || dir == 0 {
-		fmt.Println("going right", total)
-		if dir != 0 {
-			total = 10*(total) + *schematicLine[j]
-		}
-		val := coordinates(j+1, 1, schematicLine, total)
-		if val != nil && *val/10 == total {
-			total = *val
-		}
-	}
-	fmt.Println("the total:\t\t", total)
-	schematicLine[j] = nil
-	return &total
 }
