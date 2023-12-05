@@ -5,3 +5,9 @@
 - day 1
   - part 1
   - part 2
+- day 2
+  - part 1
+  - part 2
+- day 3
+  - part 1
+  - part 2
