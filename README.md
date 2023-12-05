@@ -11,5 +11,9 @@
 - day 3
   - part 1
   - part 2
+- day 4
+  - part 1
+  - part 2
+
 
 Currently running 1 day behind!
