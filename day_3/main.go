@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	input, err := os.ReadFile("day3.txt")
+	input, err := os.ReadFile("input.txt")
 	if err != nil {
 		log.Fatal("failed to read input")
 	}
@@ -19,7 +19,6 @@ func main() {
 }
 
 func partOne(input []string) {
-	// last row has a new line on it
 	size := len(input)
 	schematic := make([][]*int, size)
 	symbols := make([][]bool, size)
@@ -52,6 +51,12 @@ func partOne(input []string) {
 				}
 				val = 0
 				length = 0
+			}
+			if j == len(schematic[i])-1 && val != 0 {
+				ptrVal := intPtr(val)
+				for k := length; k > 0; k-- {
+					schematic[i][j-k] = ptrVal
+				}
 			}
 		}
 	}
