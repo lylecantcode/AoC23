@@ -1,11 +1,10 @@
 package main
 
 import (
-	"cmp"
 	"fmt"
 	"log"
 	"os"
-	"slices"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -31,10 +30,10 @@ type conv struct {
 
 func partOne(input []string) {
 	// map for each, use map address to store all values,
-	var seedToSoil, soilToFert, fertToWater, waterToLight, lightToTemp, tempToHumid, humidToLoc []conv
-	conversionSlice := make([]conv, 7)
+	conversionSlice := make([][]conv, 7)
 
 	seeds := strings.Fields(input[0])
+	fmt.Println(seeds[1:])
 	// can loop through using if line break
 	section := 0
 	for i := 2; i < len(input); i++ {
@@ -46,44 +45,33 @@ func partOne(input []string) {
 		if len(inputSlice) != 3 {
 			continue
 		}
-		min, _ := strconv.Atoi(inputSlice[0])
-		convStart, _ := strconv.Atoi(inputSlice[1])
+		min, _ := strconv.Atoi(inputSlice[1])
+		convStart, _ := strconv.Atoi(inputSlice[0])
 		length, _ := strconv.Atoi(inputSlice[2])
 		max := min + length
 
-		switch section {
-		case 0:
-			seedToSoil = append(seedToSoil, conv{min, max, convStart})
-		case 1:
-			soilToFert = append(soilToFert, conv{min, max, convStart})
-		case 2:
-			fertToWater = append(fertToWater, conv{min, max, convStart})
-		case 3:
-			waterToLight = append(waterToLight, conv{min, max, convStart})
-		case 4:
-			lightToTemp = append(lightToTemp, conv{min, max, convStart})
-		case 5:
-			tempToHumid = append(tempToHumid, conv{min, max, convStart})
-		case 6:
-			humidToLoc = append(humidToLoc, conv{min, max, convStart})
-		}
-	}
-	slices.SortFunc(seedToSoil, sortConv)
-	slices.SortFunc(soilToFert, sortConv)
-	slices.SortFunc(fertToWater, sortConv)
-	slices.SortFunc(waterToLight, sortConv)
-	slices.SortFunc(lightToTemp, sortConv)
-	slices.SortFunc(tempToHumid, sortConv)
-	slices.SortFunc(humidToLoc, sortConv)
-	for _, seed := range seeds {
-		for i := 0; i < len(seedToSoil); i++ {
+		conversionSlice[section] = append(conversionSlice[section], conv{min, max, convStart})
 
-		}
 	}
 
-	fmt.Println(seeds, humidToLoc)
-}
+	var locations sort.IntSlice
+	for _, seed := range seeds[1:] {
+		current, _ := strconv.Atoi(seed)
+		for i := 0; i < len(conversionSlice); i++ {
+			currentConv := conversionSlice[i]
+		conversionChart:
+			for j := 0; j < len(currentConv); j++ {
+				if current > currentConv[j].min && current < currentConv[j].max {
+					current = current - currentConv[j].min + currentConv[j].convStart
+					fmt.Println("converted", current, currentConv[j])
+					break conversionChart
+				}
+			}
+			// fmt.Println(current)
 
-func sortConv(a, b conv) int {
-	return cmp.Compare(a.min, b.min)
+		}
+		locations = append(locations, current)
+	}
+	sort.Sort(locations)
+	fmt.Println(locations[0])
 }
