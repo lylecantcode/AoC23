@@ -1,28 +1,22 @@
 package main
 
 import (
-	mylib "aoc23/library"
+	"aoc23/myLib"
 	"fmt"
-	"log"
-	"os"
 	"regexp"
 	"strings"
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal("failed to read input")
-	}
-	inputLines := strings.Split(string(input), "\n")
-	partOne(inputLines)
-	partTwo(inputLines)
+	input := myLib.ErrHandledReadConv("input.txt")
+	partOne(input)
+	partTwo(input)
 }
 
 func partTwo(input []string) {
 	re := regexp.MustCompile(`[^0-9]+`)
-	time := mylib.ErrHandledAtoi(re.ReplaceAllString(input[0], ""))
-	dist := mylib.ErrHandledAtoi(re.ReplaceAllString(input[1], ""))
+	time := myLib.ErrHandledAtoi(re.ReplaceAllString(input[0], ""))
+	dist := myLib.ErrHandledAtoi(re.ReplaceAllString(input[1], ""))
 	minWin := 0
 	maxWin := 0
 	for j := 0; j < time; j++ {
@@ -46,9 +40,9 @@ func partOne(input []string) {
 	winning := 1
 	for i := 0; i < len(times); i++ {
 		winRace := 0
-		time := mylib.ErrHandledAtoi(times[i])
+		time := myLib.ErrHandledAtoi(times[i])
 		for j := 0; j < time; j++ {
-			if j*(time-j) > mylib.ErrHandledAtoi(dists[i]) {
+			if j*(time-j) > myLib.ErrHandledAtoi(dists[i]) {
 				winRace++
 			}
 		}

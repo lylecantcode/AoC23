@@ -1,21 +1,16 @@
 package main
 
 import (
+	"aoc23/myLib"
 	"fmt"
-	"log"
-	"os"
 	"slices"
 	"strings"
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal("failed to read input")
-	}
-	inputLines := strings.Split(string(input), "\n")
-	partOne(inputLines)
-	partTwo(inputLines)
+	input := myLib.ErrHandledReadConv("input.txt")
+	partOne(input)
+	partTwo(input)
 }
 
 func partTwo(input []string) {

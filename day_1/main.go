@@ -1,17 +1,13 @@
 package main
 
 import (
+	"aoc23/myLib"
 	"fmt"
-	"log"
-	"os"
 	"strings"
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal("failed to read input")
-	}
+	input := myLib.ErrHandledRead("input.txt")
 	partOne(input)
 	partTwo(input)
 }

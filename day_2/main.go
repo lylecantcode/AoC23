@@ -1,10 +1,9 @@
 package main
 
 import (
-	mylib "aoc23/library"
+	"aoc23/myLib"
 	"fmt"
 	"log"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,12 +17,7 @@ type colours struct {
 }
 
 func main() {
-	input, err := os.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal("failed to read input")
-	}
-	inputLines := strings.Split(string(input), "\n")
-	solving(inputLines)
+	solving(myLib.ErrHandledReadConv("input.txt"))
 }
 
 func solving(input []string) {
@@ -72,7 +66,7 @@ func power(input, colour string) int {
 			continue
 		}
 
-		val := mylib.ErrHandledAtoi(values[0])
+		val := myLib.ErrHandledAtoi(values[0])
 
 		if val > max {
 			max = val
@@ -81,6 +75,7 @@ func power(input, colour string) int {
 	return max
 }
 
+// was used for part 1
 func gameCount(input, colour string, max int) bool {
 	games := strings.Split(input, colour)
 	for i := 0; i < len(games); i++ {
@@ -97,7 +92,7 @@ func gameCount(input, colour string, max int) bool {
 		}
 		ints := make(sort.IntSlice, len(values))
 		for i, s := range values {
-			ints[i] = mylib.ErrHandledAtoi(s)
+			ints[i] = myLib.ErrHandledAtoi(s)
 		}
 		ints.Sort()
 		if ints[len(ints)-1] > max {
@@ -123,7 +118,7 @@ func colourCount(input, colour string, max int) bool {
 		}
 		ints := make(sort.IntSlice, len(values))
 		for i, s := range values {
-			ints[i] = mylib.ErrHandledAtoi(s)
+			ints[i] = myLib.ErrHandledAtoi(s)
 		}
 		ints.Sort()
 		if ints[len(ints)-1] > max {
