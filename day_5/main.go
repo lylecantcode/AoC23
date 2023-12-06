@@ -1,10 +1,10 @@
 package main
 
 import (
+	mylib "aoc23/library"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -40,9 +40,9 @@ func partTwo(input []string) {
 		if len(inputSlice) != 3 {
 			continue
 		}
-		min, _ := strconv.Atoi(inputSlice[1])
-		convStart, _ := strconv.Atoi(inputSlice[0])
-		length, _ := strconv.Atoi(inputSlice[2])
+		min := mylib.ErrHandledAtoi(inputSlice[1])
+		convStart := mylib.ErrHandledAtoi(inputSlice[0])
+		length := mylib.ErrHandledAtoi(inputSlice[2])
 		max := min + length
 
 		conversionSlice[section] = append(conversionSlice[section], conv{min, max, convStart})
@@ -52,8 +52,8 @@ func partTwo(input []string) {
 	const MaxUint = ^uint(0)
 	var location int = int(MaxUint >> 1)
 	for k := 1; k < len(seeds); k += 2 {
-		seedStart, _ := strconv.Atoi(seeds[k])
-		seedLen, _ := strconv.Atoi(seeds[k+1])
+		seedStart := mylib.ErrHandledAtoi(seeds[k])
+		seedLen := mylib.ErrHandledAtoi(seeds[k+1])
 		for seed := seedStart; seed < seedStart+seedLen; seed++ {
 			current := seed
 			// fmt.Println("current seed:", current)

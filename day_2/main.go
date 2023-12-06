@@ -1,6 +1,7 @@
 package main
 
 import (
+	mylib "aoc23/library"
 	"fmt"
 	"log"
 	"os"
@@ -71,7 +72,7 @@ func power(input, colour string) int {
 			continue
 		}
 
-		val, _ := strconv.Atoi(values[0])
+		val := mylib.ErrHandledAtoi(values[0])
 
 		if val > max {
 			max = val
@@ -96,7 +97,7 @@ func gameCount(input, colour string, max int) bool {
 		}
 		ints := make(sort.IntSlice, len(values))
 		for i, s := range values {
-			ints[i], _ = strconv.Atoi(s)
+			ints[i] = mylib.ErrHandledAtoi(s)
 		}
 		ints.Sort()
 		if ints[len(ints)-1] > max {
@@ -122,7 +123,7 @@ func colourCount(input, colour string, max int) bool {
 		}
 		ints := make(sort.IntSlice, len(values))
 		for i, s := range values {
-			ints[i], _ = strconv.Atoi(s)
+			ints[i] = mylib.ErrHandledAtoi(s)
 		}
 		ints.Sort()
 		if ints[len(ints)-1] > max {
