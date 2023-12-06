@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -15,11 +14,7 @@ func main() {
 		log.Fatal("failed to read input")
 	}
 	inputLines := strings.Split(string(input), "\n")
-	partOne(inputLines)
 	partTwo(inputLines)
-}
-
-func partTwo(input []string) {
 }
 
 type conv struct {
@@ -28,12 +23,12 @@ type conv struct {
 	convStart int
 }
 
-func partOne(input []string) {
+func partTwo(input []string) {
 	// map for each, use map address to store all values,
 	conversionSlice := make([][]conv, 7)
 
 	seeds := strings.Fields(input[0])
-	fmt.Println(seeds[1:])
+	// fmt.Println(seeds[1:])
 	// can loop through using if line break
 	section := 0
 	for i := 2; i < len(input); i++ {
@@ -53,25 +48,30 @@ func partOne(input []string) {
 		conversionSlice[section] = append(conversionSlice[section], conv{min, max, convStart})
 
 	}
-
-	var locations sort.IntSlice
-	for _, seed := range seeds[1:] {
-		current, _ := strconv.Atoi(seed)
-		for i := 0; i < len(conversionSlice); i++ {
-			currentConv := conversionSlice[i]
-		conversionChart:
-			for j := 0; j < len(currentConv); j++ {
-				if current > currentConv[j].min && current < currentConv[j].max {
-					current = current - currentConv[j].min + currentConv[j].convStart
-					fmt.Println("converted", current, currentConv[j])
-					break conversionChart
+	// fmt.Println(conversionSlice)
+	const MaxUint = ^uint(0)
+	var location int = int(MaxUint >> 1)
+	for k := 1; k < len(seeds); k += 2 {
+		seedStart, _ := strconv.Atoi(seeds[k])
+		seedLen, _ := strconv.Atoi(seeds[k+1])
+		for seed := seedStart; seed < seedStart+seedLen; seed++ {
+			current := seed
+			// fmt.Println("current seed:", current)
+			for i := 0; i < len(conversionSlice); i++ {
+				currentConv := conversionSlice[i]
+				for j := 0; j < len(currentConv); j++ {
+					if current >= currentConv[j].min && current < currentConv[j].max {
+						current = current - currentConv[j].min + currentConv[j].convStart
+						// fmt.Println("converted", current, currentConv[j])
+						break
+					}
 				}
 			}
-			// fmt.Println(current)
 
+			if current < location {
+				location = current
+			}
 		}
-		locations = append(locations, current)
 	}
-	sort.Sort(locations)
-	fmt.Println(locations[0])
+	fmt.Println(location)
 }
