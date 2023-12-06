@@ -31,6 +31,17 @@ func ErrHandledRead(s string) []byte {
 	return a
 }
 
+func CheckSurroundings(i, j int, slice [][]*int) *int {
+	if i < 0 || j < 0 || i >= len(slice) || j >= len(slice[i]) || slice[i][j] == nil {
+		return nil
+	}
+	return slice[i][j]
+}
+
+func IntPtr(val int) *int {
+	return &val
+}
+
 /*
 // make a generic err handler?
 

@@ -23,7 +23,7 @@ func partOne(input []string) {
 		for j := 0; j < width; j++ {
 			val := input[i][j]
 			if val >= 48 && val <= 57 {
-				schematic[i][j] = intPtr(int(val) - 48)
+				schematic[i][j] = myLib.IntPtr(int(val) - 48)
 			} else if val != '.' {
 				symbols[i][j] = true
 			}
@@ -39,7 +39,7 @@ func partOne(input []string) {
 				val = val*10 + *current
 				length++
 			} else {
-				ptrVal := intPtr(val)
+				ptrVal := myLib.IntPtr(val)
 				for k := length; k > 0; k-- {
 					schematic[i][j-k] = ptrVal
 				}
@@ -47,7 +47,7 @@ func partOne(input []string) {
 				length = 0
 			}
 			if j == len(schematic[i])-1 && val != 0 {
-				ptrVal := intPtr(val)
+				ptrVal := myLib.IntPtr(val)
 				for k := length; k > 0; k-- {
 					schematic[i][j-k] = ptrVal
 				}
@@ -62,7 +62,7 @@ func partOne(input []string) {
 				// var symbolTracker []*int
 				for k := i - 1; k <= i+1; k++ {
 					for l := j - 1; l <= j+1; l++ {
-						address := checkProximities(k, l, schematic)
+						address := myLib.CheckSurroundings(k, l, schematic)
 						if address != nil && !slices.Contains(addressSlice, address) {
 							addressSlice = append(addressSlice, address)
 							// symbolTracker = append(symbolTracker, address)
@@ -80,13 +80,6 @@ func partOne(input []string) {
 	fmt.Println(total)
 }
 
-func checkProximities(i, j int, slice [][]*int) *int {
-	if i < 0 || j < 0 || i >= len(slice) || j >= len(slice[i]) || slice[i][j] == nil {
-		return nil
-	}
-	return slice[i][j]
-}
-
 func partTwo(input []string) {
 	size := len(input)
 	schematic := make([][]*int, size)
@@ -98,7 +91,7 @@ func partTwo(input []string) {
 		for j := 0; j < width; j++ {
 			val := input[i][j]
 			if val >= 48 && val <= 57 {
-				schematic[i][j] = intPtr(int(val) - 48)
+				schematic[i][j] = myLib.IntPtr(int(val) - 48)
 			} else if val == '*' {
 				symbols[i][j] = true
 			}
@@ -114,7 +107,7 @@ func partTwo(input []string) {
 				val = val*10 + *current
 				length++
 			} else {
-				ptrVal := intPtr(val)
+				ptrVal := myLib.IntPtr(val)
 				for k := length; k > 0; k-- {
 					schematic[i][j-k] = ptrVal
 				}
@@ -122,7 +115,7 @@ func partTwo(input []string) {
 				length = 0
 			}
 			if j == len(schematic[i])-1 && val != 0 {
-				ptrVal := intPtr(val)
+				ptrVal := myLib.IntPtr(val)
 				for k := length; k > 0; k-- {
 					schematic[i][j-k] = ptrVal
 				}
@@ -138,7 +131,7 @@ func partTwo(input []string) {
 				var symbolTracker []*int
 				for k := i - 1; k <= i+1; k++ {
 					for l := j - 1; l <= j+1; l++ {
-						address := checkProximities(k, l, schematic)
+						address := myLib.CheckSurroundings(k, l, schematic)
 						if address != nil && !slices.Contains(addressSlice, address) {
 							addressSlice = append(addressSlice, address)
 							symbolTracker = append(symbolTracker, address)
@@ -152,8 +145,4 @@ func partTwo(input []string) {
 		}
 	}
 	fmt.Println(total)
-}
-
-func intPtr(i int) *int {
-	return &i
 }
