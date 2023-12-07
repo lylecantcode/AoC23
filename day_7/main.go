@@ -12,15 +12,17 @@ func main() {
 	fmt.Println(partTwo(input))
 }
 
+type HandType int
+
 // first numbers on tie
 type rank struct {
 	hand   string
 	bid    int
-	values int
+	values HandType
 }
 
 const (
-	single = iota + 1
+	single HandType = iota + 1
 	pair
 	twoPair
 	threes
@@ -36,7 +38,7 @@ func partTwo(input []string) int {
 	// -1 because of extra line at end of input
 	strength := len(input) - 1
 	for i := 0; i < strength; i++ {
-		handVal := 1
+		handVal := single
 		// 5 cards
 		hand := input[i][:5]
 		jokers := strings.Count(hand, "J")
@@ -48,15 +50,15 @@ func partTwo(input []string) int {
 			case 4:
 				handVal = fours
 			case 3:
-				if handVal == 2 {
+				if handVal == pair {
 					handVal = fullHouse
 				} else {
 					handVal = threes
 				}
 			case 2:
-				if handVal == 3 {
+				if handVal == threes {
 					handVal = fullHouse
-				} else if handVal == 2 {
+				} else if handVal == pair {
 					handVal = twoPair
 				} else {
 					handVal = pair
@@ -110,6 +112,5 @@ func partTwo(input []string) int {
 	for i := 0; i < strength; i++ {
 		total += order[i].bid * (i + 1)
 	}
-	fmt.Println(order)
 	return total
 }
