@@ -20,4 +20,7 @@
 - [day 6](./day_6/main.go)
   - part 1
   - part 2
+- [day 7](./day_7/main.go)
+  - part 1
+  - part 2 :heavy_minus:
 

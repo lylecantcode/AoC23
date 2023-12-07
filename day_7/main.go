@@ -9,15 +9,9 @@ import (
 
 func main() {
 	input := myLib.ErrHandledReadConv("input.txt")
-	fmt.Println(partOne(input))
 	fmt.Println(partTwo(input))
 }
 
-func partTwo(input []string) int {
-	return 0
-}
-
-// 7:5, 6:4, 5:full house, 4:3, 3:2*2, 2:2, 1:highest
 // first numbers on tie
 type rank struct {
 	hand   string
@@ -25,36 +19,79 @@ type rank struct {
 	values int
 }
 
-func partOne(input []string) int {
-	cards := []string{"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"}
+const (
+	single = iota + 1
+	pair
+	twoPair
+	threes
+	fullHouse
+	fours
+	fives
+)
+
+func partTwo(input []string) int {
+	cards := []string{"2", "3", "4", "5", "6", "7", "8", "9", "T", "Q", "K", "A"}
 	// order input by strength, keep track of "bid", bid*strength (1 based index)
 	var order []rank
-	// 5 cards
 	// -1 because of extra line at end of input
 	strength := len(input) - 1
 	for i := 0; i < strength; i++ {
 		handVal := 1
+		// 5 cards
 		hand := input[i][:5]
+		jokers := strings.Count(hand, "J")
 		for j := 0; j < len(cards); j++ {
 			val := strings.Count(hand, cards[j])
 			switch val {
 			case 5:
-				handVal = 7
+				handVal = fives
 			case 4:
-				handVal = 6
+				handVal = fours
 			case 3:
 				if handVal == 2 {
-					handVal = 5
+					handVal = fullHouse
 				} else {
-					handVal = 4
+					handVal = threes
 				}
 			case 2:
 				if handVal == 3 {
-					handVal = 5
+					handVal = fullHouse
 				} else if handVal == 2 {
-					handVal = 3
+					handVal = twoPair
 				} else {
-					handVal = 2
+					handVal = pair
+				}
+			}
+		}
+		if jokers > 0 {
+			switch handVal {
+			case fours: // 4 of a kind -> 5
+				handVal = fives
+			case threes: // 3 of a kind -> 4, 5
+				if jokers == 2 {
+					handVal = fives
+				} else {
+					handVal = fours
+				}
+			case twoPair: // 2 pair -> full house
+				handVal = fullHouse
+			case pair: // 1 pair  -> 3, 4, 5
+				if jokers == 3 {
+					handVal = fives
+				} else if jokers == 2 {
+					handVal = fours
+				} else {
+					handVal = threes
+				}
+			case single:
+				if jokers >= 4 {
+					handVal = fives
+				} else if jokers == 3 {
+					handVal = fours
+				} else if jokers == 2 {
+					handVal = threes
+				} else {
+					handVal = pair
 				}
 			}
 		}
@@ -64,8 +101,9 @@ func partOne(input []string) int {
 		order[i].hand = strings.ReplaceAll(order[i].hand, "A", "Z")
 		order[i].hand = strings.ReplaceAll(order[i].hand, "K", "Y")
 		order[i].hand = strings.ReplaceAll(order[i].hand, "Q", "X")
-		order[i].hand = strings.ReplaceAll(order[i].hand, "J", "W")
+		order[i].hand = strings.ReplaceAll(order[i].hand, "J", "1")
 	}
+
 	sort.SliceStable(order, func(i, j int) bool { return strings.Compare(order[i].hand, order[j].hand) < 1 })
 	sort.SliceStable(order, func(i, j int) bool { return order[i].values < order[j].values })
 	total := 0
