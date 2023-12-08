@@ -23,4 +23,7 @@
 - [day 7](./day_7/main.go)  
 - [x] part 1  
 - [x] part 2  
+- [day 8](./day_8/main.go)  
+- [x] part 1  
+- [x] part 2  
   
