@@ -1,8 +1,11 @@
 package myLib
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -42,45 +45,145 @@ func IntPtr(val int) *int {
 	return &val
 }
 
-/*
-// make a generic err handler?
+type set map[interface{}]interface{}
 
-type ErrHandled[T any] interface {
-	ErrHandler(T) T
+func (s set) exists(input interface{}) bool {
+	_, e := s[input]
+	return e
 }
 
-type StringConversion struct {
-	Atoi func(string) (int, error)
-}
-
-func (f StringConversion) ErrHandler(s string) int {
-	a, err := f.Atoi(s)
-	if err != nil {
-		log.Fatal(err)
+func (s set) Add(input interface{}) error {
+	val := reflect.ValueOf(input)
+	switch reflect.TypeOf(input).Kind() {
+	// any single
+	case reflect.Struct, reflect.Bool, reflect.String, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128, reflect.Uintptr:
+		s[val] = nil
+		return nil
+	case reflect.Slice, reflect.Map:
+		for i := 0; i < val.Len(); i++ {
+			s[val.Index(i)] = nil
+		}
+		return nil
 	}
-	return a
+	return errors.New(fmt.Sprintf("Cannot add this type %v to the set", reflect.TypeOf(input)))
 }
 
-type ReadFile struct {
-	toInput func(string) ([]byte, error)
-}
-
-func (f ReadFile) ErrHandler(s string) []string {
-	a, err := f.toInput(s)
-	if err != nil {
-		log.Fatal(err)
+func (s set) AddMultiple(input ...interface{}) {
+	for _, v := range input {
+		s.Add(v)
 	}
-	return strings.Split(string(a), "\n")
 }
 
-// demo of use:
-func main() {
-	atoi := StringConversion{Atoi: strconv.Atoi}
-	x := atoi.ErrHandler("5")
-	log.Println(x)
-
-	read := ReadFile{toInput: os.ReadFile}
-	input := read.ErrHandler("demo_input.txt")
-	log.Println(input)
+func (s set) Remove(input interface{}) {
+	val := reflect.ValueOf(input)
+	switch reflect.TypeOf(input).Kind() {
+	// any single
+	case reflect.Bool, reflect.String, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128, reflect.Uintptr:
+		delete(s, val)
+	case reflect.Slice, reflect.Map:
+		for i := 0; i < val.Len(); i++ {
+			delete(s, val)
+		}
+	case reflect.Struct:
+		fmt.Println("struct", val, reflect.TypeOf(input).Kind())
+		s[input] = reflect.Value{}
+	default:
+		fmt.Println(val, reflect.TypeOf(input).Kind())
+	}
 }
-*/
+
+func (s set) RemoveMultiple(input ...interface{}) {
+	for _, v := range input {
+		s.Remove(v)
+	}
+}
+
+func (s set) Clear() {
+	for k := range s {
+		delete(s, k)
+	}
+}
+
+func (s set) Update(ns set) {
+	for k := range ns {
+		s[k] = nil
+	}
+}
+
+func (s set) Union(ns set) set {
+	newSet := set{}
+	for k := range ns {
+		newSet[k] = nil
+	}
+	for k := range s {
+		newSet[k] = nil
+	}
+	return newSet
+}
+
+func (s set) Intersection(ns set) set {
+	newSet := set{}
+	for k := range s {
+		_, exists := ns[k]
+		if exists {
+			newSet[k] = nil
+		}
+	}
+	return newSet
+}
+
+func (s set) Difference(ns set) set {
+	newSet := set{}
+	for k := range s {
+		_, exists := ns[k]
+		if !exists {
+			newSet[k] = nil
+		}
+	}
+	return newSet
+}
+
+func (s set) Print() {
+	var str strings.Builder
+	for k := range s {
+		fmt.Fprintf(&str, "%v ", k)
+	}
+	fmt.Println(str.String())
+}
+
+func (s set) Copy() set {
+	ns := set{}
+	ns.Update(s)
+	return ns
+}
+
+func (s set) IsIntersected(ns set) bool {
+	if len(s.Intersection(ns)) > 0 {
+		return true
+	}
+	return false
+}
+
+func StringToIntArray(input string) []int {
+	row := strings.Fields(input)
+	output := []int{}
+	for i := 0; i < len(row); i++ {
+		output = append(output, ErrHandledAtoi(row[i]))
+	}
+	return output
+}
+
+type fn func(rune) bool
+
+func StringToIntArrayFunc(input string, f fn) []int {
+	row := strings.FieldsFunc(input, f)
+	output := []int{}
+	for i := 0; i < len(row); i++ {
+		output = append(output, ErrHandledAtoi(row[i]))
+	}
+	return output
+}
+
+// any reason to implement pop?
