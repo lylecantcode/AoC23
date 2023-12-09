@@ -10,29 +10,39 @@ func main() {
 	input := myLib.ErrHandledReadConv("input.txt")
 	fmt.Println(partOne(input))
 	fmt.Println(partTwo(input))
-	if partOne(myLib.ErrHandledReadConv("test_input.txt")) != 114 {
+	test := myLib.ErrHandledReadConv("test_input.txt")
+	if partOne(test) != 114 {
 		log.Fatal("incorrect response from test input")
+	}
+	if partTwo(test) != 2 {
+		log.Fatal("incorrect response from test input", partTwo(test))
 	}
 }
 
 func partTwo(input []string) int {
-	return 0
+	var rows [][][]int
+	var result int
+	for i := 0; i < len(input); i++ {
+		rows = append(rows, [][]int{myLib.StringToIntArray(input[i])})
+		_, add, _ := rowInterval(rows[i], 0, true)
+		result += add
+	}
+	return result
 }
-
 func partOne(input []string) int {
 	var rows [][][]int
 	var result int
 	for i := 0; i < len(input); i++ {
 		rows = append(rows, [][]int{myLib.StringToIntArray(input[i])})
-		_, add := rowInterval(rows[i], 0)
+		_, add, _ := rowInterval(rows[i], 0, false)
 		result += add
 	}
 	return result
 }
 
-func rowInterval(input [][]int, steps int) ([]int, int) {
+func rowInterval(input [][]int, steps int, first bool) ([]int, int, bool) {
 	if len(input) == 0 {
-		return nil, 0
+		return nil, 0, first
 	}
 	interval := 0
 	finished := true
@@ -47,16 +57,18 @@ func rowInterval(input [][]int, steps int) ([]int, int) {
 	}
 	steps++
 	if !finished {
-		return rowInterval(input, steps)
+		return rowInterval(input, steps, first)
 	} else {
 		newVal := 0
 		for i := 0; i < len(input); i++ {
 			if len(input[i]) != 0 {
-				newVal += input[i][len(input[i])-1]
-				// fmt.Printf("%v\n", input[i])
+				if first {
+					newVal = input[len(input)-i-1][0] - newVal
+				} else {
+					newVal += input[i][len(input[i])-1]
+				}
 			}
 		}
-		// fmt.Printf("%v\n", newVal)
-		return nil, newVal
+		return nil, newVal, first
 	}
 }
