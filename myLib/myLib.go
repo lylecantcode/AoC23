@@ -46,6 +46,10 @@ func IntPtr(val int) *int {
 	return &val
 }
 
+func BoolPtr(val bool) *bool {
+	return &val
+}
+
 type set map[interface{}]interface{}
 
 func (s set) exists(input interface{}) bool {

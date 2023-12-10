@@ -2,21 +2,19 @@ package main
 
 import (
 	"aoc23/myLib"
+	"fmt"
 	"log"
 	"strings"
 )
 
 func main() {
 	input := myLib.ErrHandledReadConv("input.txt")
-	log.Printf("part one: %v\n\n", partOne(input))
+	input = input[:len(input)-1]
 	log.Printf("part two: %v\n\n", partTwo(input))
+
 	test := myLib.ErrHandledReadConv("test_input.txt")
-	testOne := partOne(test)
 	testTwo := partTwo(test)
-	if testOne != 8 {
-		log.Fatal("incorrect response from part one test: ", testOne)
-	}
-	if testTwo != 2 {
+	if testTwo != 8 {
 		log.Fatal("incorrect response from part two test: ", testTwo)
 	}
 
@@ -42,16 +40,12 @@ type position struct {
 }
 
 func partTwo(input []string) int {
-	return 0
-}
+	// establish bounaries, iterate through and check
+	tracker := [][]*bool{}
+	for i := 0; i < len(input); i++ {
+		tracker = append(tracker, make([]*bool, len(input[i])))
+	}
 
-/*
-1) from s, find valid pipes, depends on which direcition the pipe faces
-2) follow that pipe direction to the next: s-, -7
-3) track steps
-*/
-
-func partOne(input []string) int {
 	var p position
 	for i := 0; i < len(input); i++ {
 		current := strings.IndexByte(input[i], start)
@@ -61,17 +55,61 @@ func partOne(input []string) int {
 		}
 	}
 	var n, s, e, w int
-	n = p.north(input)
-	s = p.south(input)
-	e = p.east(input)
-	w = p.west(input)
+	n = p.north(input, tracker)
+	s = p.south(input, tracker)
+	e = p.east(input, tracker)
+	w = p.west(input, tracker)
 	log.Println(n, s, e, w)
-	// total := p.move(input)
-	return myLib.Biggest(n, s, e, w) / 2
+
+	for i := 0; i < len(tracker); i++ {
+		for j := 0; j < len(tracker[i]); j++ {
+			if tracker[i][j] == nil {
+				propogate(input, tracker, i, j)
+			}
+		}
+	}
+
+	// forgot about squeezing between pipes
+	// check around each "false"
+
+	count := 0
+	for i := 0; i < len(tracker); i++ {
+		for j := 0; j < len(tracker[i]); j++ {
+			if tracker[i][j] == nil {
+				count++
+			}
+			// 	fmt.Printf(".")
+			// } else if *tracker[i][j] {
+			// 	fmt.Printf("#")
+			// } else {
+			// 	fmt.Printf(" ")
+			// }
+		}
+		fmt.Printf("\n")
+	}
+
+	return count
 
 }
 
-func (p position) north(input []string) int {
+func propogate(input []string, tracker [][]*bool, i, j int) {
+	if i < 0 || j < 0 || i > len(tracker)-1 || j > len(tracker[i])-1 {
+		return
+	}
+	if tracker[i][j] == nil && (i == 0 || j == 0 || i == len(tracker)-1 || j == len(tracker[i])-1 ||
+		(tracker[i-1][j] != nil && *tracker[i-1][j] == false) || (tracker[i+1][j] != nil && *tracker[i+1][j] == false) ||
+		(tracker[i][j-1] != nil && *tracker[i][j-1] == false) || (tracker[i][j+1] != nil && *tracker[i][j+1] == false)) {
+
+		tracker[i][j] = myLib.BoolPtr(false)
+
+		propogate(input, tracker, i+1, j)
+		propogate(input, tracker, i-1, j)
+		propogate(input, tracker, i, j+1)
+		propogate(input, tracker, i, j-1)
+	}
+}
+
+func (p position) north(input []string, tracker [][]*bool) int {
 	if p.vertical < 1 {
 		return 0
 	}
@@ -85,13 +123,16 @@ func (p position) north(input []string) int {
 	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
 	switch np.symbol {
 	case pipeNS:
-		return np.north(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.north(input, tracker)
 	case pipeSE:
-		return np.east(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.east(input, tracker)
 	case pipeSW:
-		return np.west(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.west(input, tracker)
 	case start:
-		log.Println("start", np.stepsTaken)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
 		return np.stepsTaken
 	default:
 		log.Println("ended north start")
@@ -99,7 +140,7 @@ func (p position) north(input []string) int {
 	}
 }
 
-func (p position) south(input []string) int {
+func (p position) south(input []string, tracker [][]*bool) int {
 	if p.vertical >= len(input)-1 {
 		return 0
 	}
@@ -113,13 +154,16 @@ func (p position) south(input []string) int {
 	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
 	switch np.symbol {
 	case pipeNS:
-		return np.south(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.south(input, tracker)
 	case pipeNE:
-		return np.east(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.east(input, tracker)
 	case pipeNW:
-		return np.west(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.west(input, tracker)
 	case start:
-		log.Println("start", np.stepsTaken)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
 		return np.stepsTaken
 	default:
 		log.Println("ended south start")
@@ -127,7 +171,7 @@ func (p position) south(input []string) int {
 	}
 }
 
-func (p position) east(input []string) int {
+func (p position) east(input []string, tracker [][]*bool) int {
 	if p.horizontal >= len(input[0])-1 {
 		return 0
 	}
@@ -141,13 +185,16 @@ func (p position) east(input []string) int {
 	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
 	switch np.symbol {
 	case pipeEW:
-		return np.east(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.east(input, tracker)
 	case pipeNW:
-		return np.north(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.north(input, tracker)
 	case pipeSW:
-		return np.south(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.south(input, tracker)
 	case start:
-		log.Println("start", np.stepsTaken)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
 		return np.stepsTaken
 	default:
 		log.Println("ended east start")
@@ -155,7 +202,7 @@ func (p position) east(input []string) int {
 	}
 }
 
-func (p position) west(input []string) int {
+func (p position) west(input []string, tracker [][]*bool) int {
 	if p.horizontal < 1 {
 		return 0
 	}
@@ -169,16 +216,23 @@ func (p position) west(input []string) int {
 	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
 	switch np.symbol {
 	case pipeEW:
-		return np.west(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.west(input, tracker)
 	case pipeNE:
-		return np.north(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.north(input, tracker)
 	case pipeSE:
-		return np.south(input)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
+		return np.south(input, tracker)
 	case start:
-		log.Println("start", np.stepsTaken)
+		tracker[np.vertical][np.horizontal] = myLib.BoolPtr(true)
 		return np.stepsTaken
 	default:
 		log.Println("ended west start")
 		return 0
 	}
 }
+
+// byteInput := []byte(input[np.vertical])
+// byteInput[p.horizontal] = 'x'
+// input[np.vertical] = string(byteInput)
