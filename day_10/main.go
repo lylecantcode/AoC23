@@ -2,14 +2,24 @@ package main
 
 import (
 	"aoc23/myLib"
-	"fmt"
+	"log"
 	"strings"
 )
 
 func main() {
 	input := myLib.ErrHandledReadConv("input.txt")
-	fmt.Println(partOne(input))
-	fmt.Println(partTwo(input))
+	log.Printf("part one: %v\n\n", partOne(input))
+	log.Printf("part two: %v\n\n", partTwo(input))
+	test := myLib.ErrHandledReadConv("test_input.txt")
+	testOne := partOne(test)
+	testTwo := partTwo(test)
+	if testOne != 8 {
+		log.Fatal("incorrect response from part one test: ", testOne)
+	}
+	if testTwo != 2 {
+		log.Fatal("incorrect response from part two test: ", testTwo)
+	}
+
 }
 
 const (
@@ -23,39 +33,15 @@ const (
 	start  = 'S'
 )
 
-func pipeTravel(input []string, i, j int) {
-	/* valid pipe combos
-	pipeNS -> pipeNS, pipeNE, pipeNW, pipeSW, pipeSE
-	pipeEW -> pipeEW, pipeNE, pipeNW, pipeSW, pipeSE
-	*/
-	if i < len(input)-1 && input[i+1][j] == pipeNS {
-		// valid to travel down
-	}
-	if i > 0 && input[i-1][j] == pipeNS {
-
-	}
-}
-
-func partTwo(input []string) int {
-	return 0
-}
-
 type position struct {
 	symbol     byte
 	horizontal int
 	vertical   int
 	stepsTaken int
+	from       byte
 }
 
-func partOne(input []string) int {
-	var initial position
-	for i := 0; i < len(input); i++ {
-		current := strings.IndexByte(input[i], start)
-		if current != -1 {
-			initial = position{start, current, i, 0}
-		}
-	}
-	_ = initial
+func partTwo(input []string) int {
 	return 0
 }
 
@@ -63,81 +49,136 @@ func partOne(input []string) int {
 1) from s, find valid pipes, depends on which direcition the pipe faces
 2) follow that pipe direction to the next: s-, -7
 3) track steps
-
 */
 
-func recursivePipeCheck(input []string, pos position) (byte, position) {
-	if pos.vertical < 0 || pos.horizontal < 0 || pos.vertical >= len(input) || pos.vertical >= len(input[0]) {
-		return ' ', position{}
+func partOne(input []string) int {
+	var p position
+	for i := 0; i < len(input); i++ {
+		current := strings.IndexByte(input[i], start)
+		if current != -1 {
+			p = position{start, current, i, 0, start}
+			break
+		}
 	}
-	sym, newPos := recursivePipeCheck(input, func(p position) position { p.vertical = pos.vertical - 1; return p }(pos))
-	if sym != ' ' {
-		switch input[newPos.vertical][pos.horizontal] {
-		case pipeNS, pipeSE, pipeSW:
+	var n, s, e, w int
+	n = p.north(input)
+	s = p.south(input)
+	e = p.east(input)
+	w = p.west(input)
+	log.Println(n, s, e, w)
+	// total := p.move(input)
+	return myLib.Biggest(n, s, e, w) / 2
 
-		}
-	}
-	sym, newPos = recursivePipeCheck(input, func(p position) position { p.vertical = pos.vertical + 1; return p }(pos))
-	if sym != ' ' {
-		switch input[newPos.vertical][pos.horizontal] {
-		case pipeNS, pipeNE, pipeNW:
-			// return input[newPos.vertical][newPos.horizontal], true
-			validPipeCheck(input, newPos, position{})
-		}
-	}
-	sym, newPos = recursivePipeCheck(input, func(p position) position { p.horizontal = pos.horizontal - 1; return p }(pos))
-	if sym != ' ' {
-		switch input[pos.vertical][newPos.horizontal] {
-		case pipeEW, pipeNW, pipeSW:
-			// return input[newPos.vertical][newPos.horizontal], true
-			validPipeCheck(input, newPos, position{})
-		}
-	}
-	sym, newPos = recursivePipeCheck(input, func(p position) position { p.horizontal = pos.horizontal - 1; return p }(pos))
-	if sym != ' ' {
-		switch input[pos.vertical][newPos.horizontal] {
-		case pipeEW, pipeNE, pipeSE:
-			// return input[newPos.vertical][newPos.horizontal], true
-			validPipeCheck(input, newPos, position{})
-		}
-	}
-	if input[newPos.vertical][newPos.horizontal] == start {
-		// full loop
-	}
-	return ' ', position{}
 }
 
-func validPipeCheck(input []string, pos, newPos position) (byte, position) {
-	if newPos.vertical < 0 || newPos.horizontal < 0 || newPos.vertical >= len(input) || newPos.vertical >= len(input[0]) {
-		return ' ', position{}
+func (p position) north(input []string) int {
+	if p.vertical < 1 {
+		return 0
 	}
+	np := position{
+		from:       'n',
+		symbol:     input[p.vertical-1][p.horizontal],
+		horizontal: p.horizontal,
+		vertical:   p.vertical - 1,
+		stepsTaken: p.stepsTaken + 1,
+	}
+	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
+	switch np.symbol {
+	case pipeNS:
+		return np.north(input)
+	case pipeSE:
+		return np.east(input)
+	case pipeSW:
+		return np.west(input)
+	case start:
+		log.Println("start", np.stepsTaken)
+		return np.stepsTaken
+	default:
+		log.Println("ended north start")
+		return 0
+	}
+}
 
-	if pos.vertical < newPos.vertical {
-		switch input[newPos.vertical][pos.horizontal] {
-		case pipeNS, pipeSE, pipeSW:
+func (p position) south(input []string) int {
+	if p.vertical >= len(input)-1 {
+		return 0
+	}
+	np := position{
+		from:       's',
+		symbol:     input[p.vertical+1][p.horizontal],
+		horizontal: p.horizontal,
+		vertical:   p.vertical + 1,
+		stepsTaken: p.stepsTaken + 1,
+	}
+	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
+	switch np.symbol {
+	case pipeNS:
+		return np.south(input)
+	case pipeNE:
+		return np.east(input)
+	case pipeNW:
+		return np.west(input)
+	case start:
+		log.Println("start", np.stepsTaken)
+		return np.stepsTaken
+	default:
+		log.Println("ended south start")
+		return 0
+	}
+}
 
-		}
-	} else if pos.vertical > newPos.vertical {
-		switch input[newPos.vertical][pos.horizontal] {
-		case pipeNS, pipeNE, pipeNW:
-			// return input[newPos.vertical][newPos.horizontal], true
-			validPipeCheck(input, newPos, position{})
-		}
-	} else if pos.horizontal < newPos.horizontal {
-		switch input[pos.vertical][newPos.horizontal] {
-		case pipeEW, pipeNW, pipeSW:
-			// return input[newPos.vertical][newPos.horizontal], true
-			validPipeCheck(input, newPos, position{})
-		}
-	} else if pos.horizontal > newPos.horizontal {
-		switch input[pos.vertical][newPos.horizontal] {
-		case pipeEW, pipeNE, pipeSE:
-			// return input[newPos.vertical][newPos.horizontal], true
-			validPipeCheck(input, newPos, position{})
-		}
+func (p position) east(input []string) int {
+	if p.horizontal >= len(input[0])-1 {
+		return 0
 	}
-	if input[newPos.vertical][newPos.horizontal] == start {
-		// full loop
+	np := position{
+		from:       'e',
+		symbol:     input[p.vertical][p.horizontal+1],
+		horizontal: p.horizontal + 1,
+		vertical:   p.vertical,
+		stepsTaken: p.stepsTaken + 1,
 	}
-	return ' ', position{}
+	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
+	switch np.symbol {
+	case pipeEW:
+		return np.east(input)
+	case pipeNW:
+		return np.north(input)
+	case pipeSW:
+		return np.south(input)
+	case start:
+		log.Println("start", np.stepsTaken)
+		return np.stepsTaken
+	default:
+		log.Println("ended east start")
+		return 0
+	}
+}
+
+func (p position) west(input []string) int {
+	if p.horizontal < 1 {
+		return 0
+	}
+	np := position{
+		from:       'w',
+		symbol:     input[p.vertical][p.horizontal-1],
+		horizontal: p.horizontal - 1,
+		vertical:   p.vertical,
+		stepsTaken: p.stepsTaken + 1,
+	}
+	// log.Println(string(np.from), string(np.symbol), np.stepsTaken)
+	switch np.symbol {
+	case pipeEW:
+		return np.west(input)
+	case pipeNE:
+		return np.north(input)
+	case pipeSE:
+		return np.south(input)
+	case start:
+		log.Println("start", np.stepsTaken)
+		return np.stepsTaken
+	default:
+		log.Println("ended west start")
+		return 0
+	}
 }

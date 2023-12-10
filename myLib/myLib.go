@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -187,3 +188,13 @@ func StringToIntArrayFunc(input string, f fn) []int {
 }
 
 // any reason to implement pop?
+
+func Biggest(integers ...int) int {
+	max := math.MinInt
+	for _, i := range integers {
+		if i > max {
+			max = i
+		}
+	}
+	return max
+}

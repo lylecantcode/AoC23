@@ -29,4 +29,8 @@
 - [day 9](./day_9/main.go)  
 - [x] part 1  
 - [x] part 2  
+- [day 10](./day_10/main.go)  
+- [x] part 1  
+- [ ] part 2  
+  
   
