@@ -80,6 +80,7 @@ func (s set) AddMultiple(input ...interface{}) {
 	}
 }
 
+// try implementing with generics?
 func (s set) Remove(input interface{}) {
 	val := reflect.ValueOf(input)
 	switch reflect.TypeOf(input).Kind() {
@@ -201,4 +202,18 @@ func Biggest(integers ...int) int {
 		}
 	}
 	return max
+}
+
+func IndexAll[S ~[]E, E comparable](s S, v E) []int {
+	indices := []int{}
+	for i := range s {
+		if v == s[i] {
+			indices = append(indices, i)
+		}
+	}
+
+	if len(indices) == 0 {
+		return nil
+	}
+	return indices
 }
