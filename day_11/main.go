@@ -2,13 +2,19 @@ package main
 
 import (
 	"aoc23/myLib"
-	"fmt"
+	"flag"
 	"log"
 	"math"
 )
 
 func main() {
-	inputBytes := myLib.ErrHandledRead("input.txt")
+	test := flag.Bool("test", false, "controls which input to use")
+	flag.Parse()
+	inputFile := "input.txt"
+	if *test {
+		inputFile = "test_input.txt"
+	}
+	inputBytes := myLib.ErrHandledRead(inputFile)
 	input := [][]byte{{}}
 	row := 0
 	for i := 0; i < len(inputBytes)-1; i++ {
@@ -19,7 +25,6 @@ func main() {
 			input[row] = append(input[row], inputBytes[i])
 		}
 	}
-	fmt.Println(input)
 	log.Println(partOne(input))
 	log.Println(partTwo(input))
 }
@@ -35,56 +40,49 @@ type galaxy struct {
 func partOne(input [][]byte) int {
 	galaxyColCounter := make([]float64, len(input[0]))
 	var galaxyPos []galaxy
-	// galaxyScale := 0
-
+	const scale = 1000000
 	// add new rows vertically
+	var floatCol int
 	for i := 0; i < len(input); i++ {
 		pos := myLib.IndexAll(input[i], '#')
 		if len(pos) == 0 {
-			input = append(input[:i], append([][]byte{input[i]}, input[i:]...)...)
-			i++
-		} else {
-			for j := 0; j < len(pos); j++ {
-				galaxyColCounter[pos[j]]++
-				fj := float64(pos[j])
-				fi := float64(i)
-				if galaxyPos == nil {
-					galaxyPos = []galaxy{{x: fj, y: fi}}
-				} else {
-					galaxyPos = append(galaxyPos, galaxy{x: fj, y: fi})
-				}
-				pos[j] = pos[j] + i
+			floatCol += scale - 1
+		}
+		for j := 0; j < len(pos); j++ {
+			// log.Printf("{%v,%v}", pos[j], i)
+			fj := float64(pos[j])
+			fi := float64(i + floatCol)
+			if galaxyPos == nil {
+				galaxyPos = []galaxy{{x: fj, y: fi}}
+			} else {
+				galaxyPos = append(galaxyPos, galaxy{x: fj, y: fi})
 			}
+			galaxyColCounter[pos[j]]++
 		}
 	}
 	var rowI int = 0
 	// add new rows horizontally
+	log.Println(galaxyColCounter)
 	for i := 0; i < len(galaxyColCounter); i++ {
 		if galaxyColCounter[i] == 0 {
-			for j := 0; j < len(input); j++ {
-				input[j] = append(input[j][:rowI], append([]byte{input[j][rowI]}, input[j][rowI:]...)...)
-
-			}
-			floatRowI := float64(rowI)
+			// log.Println(i, rowI)
+			floatRowI := float64(rowI + i)
 			for k := 0; k < len(galaxyPos); k++ {
-
 				if galaxyPos[k].x > floatRowI {
-					galaxyPos[k].x += 1
+					galaxyPos[k].x += scale - 1
 				}
 			}
-			rowI++
+			rowI += scale - 1
 		}
-		rowI++
 	}
 	var total float64
 	for i := 0; i < len(galaxyPos); i++ {
 		for j := i + 1; j < len(galaxyPos); j++ {
 			steps := math.Abs(galaxyPos[j].x-galaxyPos[i].x) + math.Abs(galaxyPos[j].y-galaxyPos[i].y)
 			total += steps
-			log.Printf("%v -> %v = %v", galaxyPos[i], galaxyPos[j], steps)
 		}
 	}
 
-	// fmt.Println(input, galaxyPos)
+	log.Println(galaxyPos)
 	return int(total)
 }
