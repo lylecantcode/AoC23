@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
 	// normal method was struggling with the linebreaks
-	file, err := os.Open("./input.txt")
+	file, err := os.Open("./test_input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,8 +41,10 @@ func partOne(patterns [][]string) int {
 	for _, pattern := range patterns {
 		sym := vertSymCheck(pattern)
 		if sym > 0 {
+			fmt.Println("vert")
 			total += sym
 		} else {
+			fmt.Println("hor")
 			total += HorSymCheck(pattern)
 		}
 	}
@@ -69,29 +70,53 @@ func transpose(input []string) []string {
 }
 
 func HorSymCheck(pattern []string) int {
+	smudged := -1
 	symLines := []int{}
 	for i := 0; i < len(pattern)-1; i++ {
-		if strings.Compare(pattern[i], pattern[i+1]) == 0 {
+		compare := len(sliceCompare([]byte(pattern[i]), []byte(pattern[i+1])))
+		if compare == 1 && smudged == -1 {
+			symLines = append(symLines, i)
+			smudged = i
+		} else if compare == 0 {
 			symLines = append(symLines, i)
 		}
 	}
+	log.Println("sym lines", symLines)
 	for k := 0; k < len(symLines); k++ {
-		line := symLines[k]
 		sym := true
-		for l := 0; l < len(pattern)/2 && sym; l++ {
-			if line-l < 0 || line+1+l >= len(pattern) {
+		line := symLines[k]
+		var compLineOne, compLineTwo int
+		for l := 1; l < len(pattern)/2 && sym; l++ {
+			compLineOne, compLineTwo = line-l, line+1+l
+			if compLineOne < 0 || compLineTwo >= len(pattern) {
 				break
 			}
-			if strings.Compare(pattern[line-l], pattern[line+l+1]) == 0 {
-				// fmt.Println("match")
+			compare := len(sliceCompare([]byte(pattern[compLineOne]), []byte(pattern[compLineTwo])))
+			if compare == 0 {
+				fmt.Println("match")
+			} else if compare == 1 && smudged == -1 {
+				smudged = l
 			} else {
 				sym = false
 			}
 		}
-		if sym {
+		log.Println(smudged, compLineOne, compLineTwo, sym)
+		if sym && smudged >= 0 && compLineOne <= smudged && compLineTwo >= smudged {
 			return (line + 1) * 100
 		}
 	}
-	fmt.Println("no H matches", pattern)
+	fmt.Println(smudged)
+	fmt.Println("no matches", pattern)
 	return -1
+}
+
+func sliceCompare[S ~[]E, E comparable](s1, s2 S) S {
+	var dif S
+	for i := 0; i < len(s1); i++ {
+		if s1[i] != s2[i] {
+			dif = append(dif, s1[i])
+		}
+	}
+	fmt.Println(dif)
+	return dif
 }
