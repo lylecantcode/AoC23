@@ -31,10 +31,16 @@
 - [x] part 2  
 - [day 10](./day_10/main.go)  
 - [x] part 1  
-- [ ] part 2  
+- [ ] part 2 - will retry at some point!
 - [day 11](./day_11/main.go)  
 - [x] part 1  
 - [x] part 2    
+  [day 12](./day_12/main.go)  
+- [ ] part 1  - ran out of time, come back to it
+- [ ] part 2    
+  [day 13](./day_13/main.go)  
+- [x] part 1  
+- [ ] part 2    
   
   
   
