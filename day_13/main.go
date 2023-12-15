@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc23/myLib"
 	"bufio"
 	"fmt"
 	"log"
@@ -52,21 +53,16 @@ func partOne(patterns [][]string) int {
 }
 
 func vertSymCheck(pattern []string) int {
-	return HorSymCheck(transpose(pattern)) / 100
-}
-
-func transpose(input []string) []string {
-	byteSlice := make([][]byte, len(input[0]))
-	for i := 0; i < len(input); i++ {
-		for j := 0; j < len(input[i]); j++ {
-			byteSlice[j] = append(byteSlice[j], input[i][j])
-		}
+	transPattern := [][]byte{}
+	for i := 0; i < len(pattern); i++ {
+		transPattern = append(transPattern, []byte(pattern[i]))
 	}
-	output := []string{}
-	for i := 0; i < len(byteSlice); i++ {
-		output = append(output, string(byteSlice[i]))
+	transPattern = myLib.Transpose(transPattern)
+	stringTransPattern := []string{}
+	for i := 0; i < len(transPattern); i++ {
+		stringTransPattern = append(stringTransPattern, string(transPattern[i]))
 	}
-	return output
+	return HorSymCheck(stringTransPattern) / 100
 }
 
 func HorSymCheck(pattern []string) int {

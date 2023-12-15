@@ -1,6 +1,7 @@
 package myLib
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"log"
@@ -27,12 +28,22 @@ func ErrHandledReadConv(s string) []string {
 	return strings.Split(string(a), "\n")
 }
 
-func ErrHandledRead(s string) []byte {
-	a, err := os.ReadFile(s)
+func ErrHandledRead(s string) [][]byte {
+	output := [][]byte{{}}
+	file, err := os.Open(s)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return a
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		output = append(output, scanner.Bytes())
+
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("failed to read %v, error: %v", s, err)
+	}
+	return output
 }
 
 func CheckSurroundings(i, j int, slice [][]*int) *int {
@@ -216,4 +227,17 @@ func IndexAll[S ~[]E, E comparable](s S, v E) []int {
 		return nil
 	}
 	return indices
+}
+
+func Transpose[S ~[][]E, E comparable](input S) S {
+	outSlice := make(S, len(input[0]))
+	for i := 0; i < len(input); i++ {
+		for j := 0; j < len(input[i]); j++ {
+			if j == len(outSlice) {
+				outSlice = append(outSlice, []E{})
+			}
+			outSlice[j] = append(outSlice[j], input[i][j])
+		}
+	}
+	return outSlice
 }
