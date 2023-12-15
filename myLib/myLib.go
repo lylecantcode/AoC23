@@ -29,7 +29,7 @@ func ErrHandledReadConv(s string) []string {
 }
 
 func ErrHandledRead(s string) [][]byte {
-	output := [][]byte{{}}
+	output := [][]byte{}
 	file, err := os.Open(s)
 	if err != nil {
 		log.Fatal(err)
@@ -231,13 +231,19 @@ func IndexAll[S ~[]E, E comparable](s S, v E) []int {
 
 func Transpose[S ~[][]E, E comparable](input S) S {
 	outSlice := make(S, len(input[0]))
+	for i := 0; i < len(input[0]); i++ {
+		outSlice[i] = make([]E, len(input))
+	}
 	for i := 0; i < len(input); i++ {
 		for j := 0; j < len(input[i]); j++ {
-			if j == len(outSlice) {
-				outSlice = append(outSlice, []E{})
-			}
-			outSlice[j] = append(outSlice[j], input[i][j])
+			outSlice[j][i] = input[i][j]
 		}
 	}
 	return outSlice
+}
+
+func PrintBytes(b [][]byte) {
+	for i := 0; i < len(b); i++ {
+		fmt.Printf("[%v]\n", string(b[i]))
+	}
 }
