@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"unicode"
 )
 
 func main() {
-	fmt.Println("rn=1", []byte("rn=1"))
 	testFlag := flag.Bool("test", false, "controls which input to use")
 	flag.Parse()
 	inputFile := "input.txt"
@@ -21,8 +21,49 @@ func main() {
 	log.Println(partTwo(input))
 }
 
+type lens struct {
+	key   string
+	value int
+}
+
 func partTwo(input []string) int {
-	return 0
+	in := strings.Split(input[0], ",")
+	outSlice := make([][]lens, 256)
+startLoop:
+	for _, val := range in {
+		out := strings.FieldsFunc(val, func(r rune) bool {
+			return !unicode.IsLetter(r) && !unicode.IsNumber(r) // number added for the test data
+		})
+		key := out[0]
+		hash := partOne([]string{key})
+		if len(out) == 1 {
+			for i := 0; i < len(outSlice[hash]); i++ {
+				if outSlice[hash][i].key == key {
+					outSlice[hash] = append(outSlice[hash][:i], outSlice[hash][i+1:]...)
+					break
+				}
+			}
+		}
+		if len(out) == 2 {
+			for i := 0; i < len(outSlice[hash]); i++ {
+				if outSlice[hash][i].key == key {
+					outSlice[hash][i].value = myLib.ErrHandledAtoi(out[1])
+					continue startLoop
+				}
+			}
+			outSlice[hash] = append(outSlice[hash], lens{key: key, value: myLib.ErrHandledAtoi(out[1])})
+		}
+	}
+
+	total := 0
+	for i := 0; i < len(outSlice); i++ {
+		for j := 0; j < len(outSlice[i]); j++ {
+			total += (i + 1) * (j + 1) * (outSlice[i][j].value)
+			fmt.Println((i + 1), (j + 1), (outSlice[i][j].value), (outSlice[i][j].key))
+		}
+	}
+
+	return total
 }
 
 func partOne(input []string) int {
@@ -38,9 +79,5 @@ func partOne(input []string) int {
 		}
 		total += valTot
 	}
-	/*Determine the ASCII code for the current character of the string.
-	Increase the current value by the ASCII code you just determined.
-	Set the current value to itself multiplied by 17.
-	Set the current value to the remainder of dividing itself by 256.*/
 	return total
 }

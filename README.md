@@ -46,7 +46,11 @@
 - [ ] part 2    
   [day 15](./day_15/main.go)  
 - [x] part 1  
+- [x] part 2    
+  [day 16](./day_16/main.go)  
+- [ ] part 1  
 - [ ] part 2    
+
   
    
   
