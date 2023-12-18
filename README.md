@@ -40,7 +40,7 @@
 - [ ] part 2    
   [day 13](./day_13/main.go)  
 - [x] part 1  
-- [ ] part 2    
+- [x] part 2    
   [day 14](./day_14/main.go)  
 - [x] part 1  
 - [ ] part 2    
@@ -52,6 +52,6 @@
 - [ ] part 2    
 
   
-   
-  
-  
+To do:
+Part 1 - 16, 17, 18
+Part 2 - 10, 12, 14, 16, 17, 18

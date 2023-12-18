@@ -3,14 +3,25 @@ package main
 import (
 	"aoc23/myLib"
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 )
 
+var verbose bool
+
 func main() {
-	// normal method was struggling with the linebreaks
-	file, err := os.Open("./test_input.txt")
+	test := flag.Bool("test", false, "controls which input to use")
+	flag.BoolVar(&verbose, "v", false, "print statements")
+	flag.Parse()
+	inputFile := "input.txt"
+	if *test {
+		inputFile = "test_input.txt"
+	}
+	// normal method was struggling with the linebreaks#
+
+	file, err := os.Open(inputFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,11 +41,7 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	log.Println(partOne(patterns))
-}
-
-func partTwo(patterns [][]string) int {
-	return 0
+	log.Printf("answer: [%v] for [%v]\n", partOne(patterns), inputFile)
 }
 
 func partOne(patterns [][]string) int {
@@ -42,11 +49,19 @@ func partOne(patterns [][]string) int {
 	for _, pattern := range patterns {
 		sym := vertSymCheck(pattern)
 		if sym > 0 {
-			fmt.Println("vert")
+			if verbose {
+				fmt.Println("vert")
+			}
 			total += sym
 		} else {
-			fmt.Println("hor")
-			total += HorSymCheck(pattern)
+			if verbose {
+				fmt.Println("hor")
+			}
+			hor := HorSymCheck(pattern)
+			if hor <= 0 {
+				fmt.Println("no matches at all", pattern)
+			}
+			total += hor
 		}
 	}
 	return total
@@ -65,54 +80,96 @@ func vertSymCheck(pattern []string) int {
 	return HorSymCheck(stringTransPattern) / 100
 }
 
+type mirror struct {
+	pattern       []string
+	reflectSmudge map[int]bool
+}
+
 func HorSymCheck(pattern []string) int {
-	smudged := -1
-	symLines := []int{}
+	// change to include smudged and not smudged as struct  per
+	m := mirror{pattern, map[int]bool{}}
 	for i := 0; i < len(pattern)-1; i++ {
-		compare := len(sliceCompare([]byte(pattern[i]), []byte(pattern[i+1])))
-		if compare == 1 && smudged == -1 {
-			symLines = append(symLines, i)
-			smudged = i
+		compare := sliceCompare([]byte(pattern[i]), []byte(pattern[i+1]))
+		// check if smudged
+		if compare == 1 {
+			m.reflectSmudge[i] = false
 		} else if compare == 0 {
-			symLines = append(symLines, i)
+			m.reflectSmudge[i] = true
 		}
 	}
-	log.Println("sym lines", symLines)
-	for k := 0; k < len(symLines); k++ {
-		sym := true
-		line := symLines[k]
-		var compLineOne, compLineTwo int
-		for l := 1; l < len(pattern)/2 && sym; l++ {
-			compLineOne, compLineTwo = line-l, line+1+l
-			if compLineOne < 0 || compLineTwo >= len(pattern) {
-				break
-			}
-			compare := len(sliceCompare([]byte(pattern[compLineOne]), []byte(pattern[compLineTwo])))
-			if compare == 0 {
-				fmt.Println("match")
-			} else if compare == 1 && smudged == -1 {
-				smudged = l
-			} else {
-				sym = false
-			}
-		}
-		log.Println(smudged, compLineOne, compLineTwo, sym)
-		if sym && smudged >= 0 && compLineOne <= smudged && compLineTwo >= smudged {
-			return (line + 1) * 100
-		}
+	if verbose {
+		log.Println("sym lines", m)
 	}
-	fmt.Println(smudged)
-	fmt.Println("no matches", pattern)
+	// checking for smudged lines
+
+	for line, smudge := range m.reflectSmudge {
+		if !smudge {
+			fmt.Printf("already smudged - possible sym line %v\n", line)
+			sym := true
+			// check for reflection around the line, if hits boundaries,
+			for i := 1; i < len(pattern) && sym; i++ {
+				// reflected pairs
+				lineOne, lineTwo := line-i, line+1+i
+				if lineOne < 0 || lineTwo >= len(pattern) {
+					break
+				}
+				comparison := sliceCompare([]byte(pattern[lineOne]), []byte(pattern[lineTwo]))
+				// already used the smudge
+				// if comparison == 1 {
+				// 	smudge = true
+				// }
+				if comparison >= 1 {
+					sym = false
+				}
+			}
+			if sym && !smudge {
+				return (line + 1) * 100
+			}
+		} else {
+			// check around reflection line, and if smudged at end, continue
+			// otherwise return (line + 1)*100
+			sym := true
+			fmt.Printf("for possible sym line %v\n", line)
+			for i := 1; i < len(pattern) && sym; i++ {
+				// reflected pairs
+				lineOne, lineTwo := line-i, line+1+i
+				if lineOne < 0 || lineTwo >= len(pattern) {
+					break
+				}
+				comparison := sliceCompare([]byte(pattern[lineOne]), []byte(pattern[lineTwo]))
+
+				if comparison == 1 {
+					smudge = false
+					fmt.Printf("found a difference between lines %v and %v (i := %v)\n", lineOne, lineTwo, i)
+				}
+				if comparison > 1 {
+					fmt.Printf("too many difs between lines %v and %v\n", lineOne, lineTwo)
+					sym = false
+				}
+			}
+			if sym && !smudge {
+				return (line + 1) * 100
+			}
+		}
+
+	}
+
+	if verbose {
+		fmt.Println("no matches")
+	}
 	return -1
 }
 
-func sliceCompare[S ~[]E, E comparable](s1, s2 S) S {
-	var dif S
+func sliceCompare[S ~[]E, E comparable](s1, s2 S) int {
+	var dif int
 	for i := 0; i < len(s1); i++ {
 		if s1[i] != s2[i] {
-			dif = append(dif, s1[i])
+			dif++
 		}
 	}
-	fmt.Println(dif)
+
+	if verbose {
+		// fmt.Printf("%v diff: \n\t%v\n\t%v\n", dif, s1, s2)
+	}
 	return dif
 }
