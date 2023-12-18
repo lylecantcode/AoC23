@@ -3,8 +3,10 @@ package main
 import (
 	"aoc23/myLib"
 	"flag"
+	"fmt"
 	"log"
 	"slices"
+	"sort"
 	"unicode"
 )
 
@@ -16,171 +18,105 @@ func main() {
 		inputFile = "test_input.txt"
 	}
 	input := myLib.ErrHandledReadConv(inputFile)
-	log.Println(partOne(input))
-	log.Println(partTwo(input))
+	log.Println("<-start time")
+	log.Println(Solution(input))
 }
 
-func partTwo(input []string) int {
-	return 0
-}
-
-type springGroup struct {
-	length, damagedCount                                                int
-	brokenGroups, fixedIndex, notfixedIndex, damagedIndex, unknownIndex []int
-	variations                                                          [][]int
-}
-
-func partOne(input []string) int {
-	var springs []springGroup
+func Solution(input []string) int {
+	total := 0
 	for i := 0; i < len(input)-1; i++ {
-		damagedSpringGroups := myLib.StringToIntArrayFunc(input[i], func(r rune) bool {
+		groups := myLib.StringToIntArrayFunc(input[i], func(r rune) bool {
 			return !unicode.IsNumber(r)
 		})
-		damagedCount := func() int {
-			tot := 0
-			for i := 0; i < len(damagedSpringGroups); i++ {
-				tot += damagedSpringGroups[i]
+		// fixedState := myLib.IndexAll([]byte(input[i]), '.')
+		damagedState := myLib.IndexAll([]byte(input[i]), '#')
+		unknownState := myLib.IndexAll([]byte(input[i]), '?')
+	
+		numMissing := func() int {
+			tot := -len(damagedState)
+			for i := 0; i < len(groups); i++ {
+				tot += groups[i]
 			}
 			return tot
 		}()
-		fixedState := myLib.IndexAll([]byte(input[i]), '.')
-		damagedState := myLib.IndexAll([]byte(input[i]), '#')
-		unknownState := myLib.IndexAll([]byte(input[i]), '?')
-		notFixedState := append(damagedState, unknownState...)
-		slices.Sort(notFixedState)
-		springs = append(springs, springGroup{length: len(input[i]) - 2*len(damagedSpringGroups), damagedCount: damagedCount, fixedIndex: fixedState,
-			notfixedIndex: notFixedState, brokenGroups: damagedSpringGroups, damagedIndex: damagedState, unknownIndex: unknownState})
-	}
-	arrangements := 0
-	for _, spring := range springs {
-		arrangements += springElim(spring)
-
-	}
-	return arrangements
-}
-
-/* func springFirstTry(spring springGroup) int {
-	var arrangements int
-	if len(spring.unknownIndex) == 0 || spring.length == spring.damagedCount {
-		arrangements += 1
-	} else {
-		// has to start at most (length - damagedcount) away but also has to account for the split between damaged count
-	nextSpring:
-		for i := 0; i < spring.length-(spring.damagedCount-1+len(spring.brokenGroups)-1); i++ {
-			// is spring potentially broken?
-			if slices.Contains(spring.notfixedIndex, i) {
-				pos := i
-				var variation []int
-				// broken groups
-				for _, v := range spring.brokenGroups {
-					// check if it matches a spring group
-					for j := 0; j < v; j++ {
-						if !slices.Contains(spring.notfixedIndex, pos) {
-							continue
-						}
-						variation = append(variation, pos)
-						pos++
-					}
-					// the space between groups:
-					pos++
-				}
-				if len(variation) == spring.damagedCount {
-					log.Println("values", variation, "expected", spring.damagedCount)
-					spring.variations = append(spring.variations, variation)
-				} else {
-					log.Println("too few values", variation, "expected", spring.damagedCount)
-				}
-				for k := 0; k < len(spring.damagedIndex); k++ {
-					if !slices.Contains(variation, spring.damagedIndex[k]) {
-						continue nextSpring
-					}
-				}
-				// add a check to make sure all the fixed springs are counted before adding them
-				// this means storing another array
-				log.Println(pos, spring.notfixedIndex, spring.brokenGroups, spring.variations)
-				arrangements += len(spring.variations)
-			}
-
+		if numMissing == len(unknownState) {
+			total += 1
+			continue
 		}
-	}
- }*/
 
-func springCheck(sg springGroup) int {
-	total := 0
-	for i := 0; i < sg.length-(sg.damagedCount+len(sg.brokenGroups)-1); i++ {
-		sg.variations = append(sg.variations, []int{})
-		indexCheck := slices.Index(sg.notfixedIndex, i)
-		if indexCheck >= 0 {
-			for _, v := range sg.brokenGroups {
-				max := i + v
-				if max < len(sg.notfixedIndex) && sg.notfixedIndex[indexCheck+v] != max {
-					continue
-				} else {
-					total++
-					sg.variations[i] = append(sg.variations[i], i)
-					log.Println("woo", total, i, sg.variations)
-				}
-			}
-
+		if slices.Compare(groupedCount(damagedState), groups) == 0 {
+			total++
+			continue
 		}
+
+		track := map[string]interface{}{}
+		sol := recursiveSolve(damagedState, unknownState, groups, track)
+		// fmt.Println(sol, groups, "\n\n")
+		total += sol
 	}
 	return total
 }
 
-func springElim(sg springGroup) int {
-	group := group(sg.notfixedIndex)
-	log.Println(group)
-	// output := []int{}
-	// 1, 1, 3
-	// 7
-	// 1, 1, 3
-	// 3, 5
-	// 1, 1, 3
-	// 4, 4, 4
-	current := 0
-	for i := 0; i < len(sg.brokenGroups); i++ {
-		numBroken := sg.brokenGroups[i]
-		if current > len(group)-1 {
-			// out of groups
-			break
-		}
-		if numBroken > group[current] {
-			// try again with a different group
-			current++
-			i--
+func groupedCount(damagedState []int) []int {
+	count := []int{1}
+	index := 0
+	for i := 0; i < len(damagedState)-1; i++ {
+		if damagedState[i+1]-damagedState[i] != 1 {
+			count = append(count, 1)
+			index++
 		} else {
-			// group[current] = group[current]-numBroken
-			group[current] -= numBroken + 1
+			count[index]++
 		}
+
 	}
-	total := 1
-	for i := 0; i < len(group); i++ {
-		if group[i] >= 0 {
-			total *= group[i] + 2
-		}
-	}
-	log.Println("elim", group, sg.brokenGroups, total)
-	return 0
+	return count
 }
 
-func group(slice []int) []int {
-	returnSlice := []int{1}
-	log.Println(slice)
-	for i := 0; i < len(slice); i++ {
-		// log.Println(slice[i], returnSlice)
-		if i >= len(slice)-2 {
-			if slice[i]-slice[i-1] == 1 {
-				returnSlice[len(returnSlice)-1]++
-			} else {
-				returnSlice = append(returnSlice, 1)
+func recursiveSolve(s1, s2, pattern []int, track map[string]interface{}) int {
+	var comp bool
+	var val int
+	uniqueCheck := fmt.Sprint(s1)
+	_, exists := track[uniqueCheck]
+	if !exists {
+		comp = slices.Equal(groupedCount(s1), pattern)
+		// fmt.Println(s1, pattern, s2, comp)
+		track[uniqueCheck] = nil
+	}
+
+	if comp {
+		val = 1
+	}
+	if len(s2) == 0 {
+		return val
+	}
+	// skipped ?
+	sol1 := recursiveSolve(s1, s2[1:], pattern, track)
+	s3 := appendToSorted(s1[:], s2[0])
+
+	// check if groupedCount(s1) == pattern
+	sol2 := recursiveSolve(s3, s2[1:], pattern, track)
+
+	return sol1 + sol2 + val // ideally do a check of right side and only check the pattern if new value is not adjacent to a damaged one
+}
+
+func appendToSorted(in []int, add int) []int {
+	out := make([]int, len(in)+1)
+	var added bool
+	// fmt.Printf("in:%v, add:%v\n", in, add)
+	if sort.IntsAreSorted(in) {
+		iterator := 0
+		for i := 0; i < len(in); i++ {
+			if add < in[i] && !added {
+				out[iterator] = add
+				iterator++
+				added = true
 			}
-			break
-		} else if slice[i+1]-slice[i] == 1 {
-			returnSlice[len(returnSlice)-1]++
-		} else {
-			returnSlice = append(returnSlice, 1)
+			out[iterator] = in[i]
+			iterator++
 		}
 	}
-	// log.Println(slice[i], returnSlice)
-	return returnSlice
+	if !added {
+		out[len(out)-1] = add
+	}
+	return out
 }
