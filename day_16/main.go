@@ -3,7 +3,6 @@ package main
 import (
 	"aoc23/myLib"
 	"flag"
-	"fmt"
 	"log"
 )
 
@@ -30,20 +29,47 @@ type beam struct {
 }
 
 func partOne(input []string) int {
-	energised := make([][]map[byte]interface{}, len(input))
-	width := len(input[0])
-	for i := range input {
-		energised[i] = make([]map[byte]interface{}, width)
+	var total int
+	// do corners separately
+	for start := 0; start < len(input); start++ {
+		energised := make([][][]map[byte]interface{}, 4)
+		width := len(input[0])
+		for j := range energised {
+			energised[j] = make([][]map[byte]interface{}, len(input))
+			for i := range input {
+				energised[j][i] = make([]map[byte]interface{}, width)
+			}
+		}
+
+		b := &beam{'e', start, 0}
+		count := b.start(input, energised[0])
+		if count > total {
+			total = count
+		}
+		b2 := &beam{'w', start, len(input) - 1}
+		count = b2.start(input, energised[1])
+		if count > total {
+			total = count
+		}
+		b3 := &beam{'s', 0, start}
+		count = b3.start(input, energised[2])
+		if count > total {
+			total = count
+		}
+		b4 := &beam{'n', len(input) - 1, start}
+		count = b4.start(input, energised[3])
+		if count > total {
+			total = count
+		}
 	}
-	b := &beam{'e', 0, 0}
 
-	// bool array to track energised squares?
-	// need to track beam position to know which way mirrors reflect
+	return total
+}
+
+func (b *beam) start(input []string, energised [][]map[byte]interface{}) int {
 	b.travel(input, energised)
-
 	count := 0
 	for i := 0; i < len(energised); i++ {
-		fmt.Println(energised[i], "\n", input[i])
 		for j := 0; j < len(energised[i]); j++ {
 			if len(energised[i][j]) != 0 {
 				count++
