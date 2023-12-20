@@ -48,10 +48,10 @@
 - [x] part 1  
 - [x] part 2    
   [day 16](./day_16/main.go)  
-- [ ] part 1  
+- [x] part 1  
 - [ ] part 2    
 
   
 To do:
-Part 1 - 16, 17, 18
+Part 1 - 17, 18
 Part 2 - 10, 12, 14, 16, 17, 18

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	testFlag := flag.Bool("test", false, "controls which input to use")
+	testFlag := flag.Bool("t", false, "controls which input to use")
 	flag.Parse()
 	inputFile := "input.txt"
 	if *testFlag {
